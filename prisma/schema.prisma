@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  avatar    String?
+  bio       String?
+  phone     String?
+  city      String?
+  state     String?
+  country   String?
+  
+  // Preferences
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  publicProfile      Boolean @default(true)
+  showContactInfo    Boolean @default(true)
+  
+  // Stats
+  postsCount         Int @default(0)
+  commentsCount      Int @default(0)
+  successfulReturns  Int @default(0)
+  
+  // Relations
+  posts      Post[]
+  comments   Comment[]
+  likes      Like[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  icon        String?
+  color       String?
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  status      PostStatus @default(LOST)
+  reward      Float?
+  
+  // Location
+  address     String
+  city        String
+  state       String
+  country     String
+  latitude    Float?
+  longitude   Float?
+  
+  // Contact Info
+  contactPhone String?
+  contactEmail String?
+  preferredContact PreferredContact @default(EMAIL)
+  
+  // Tags
+  tags        String[] // Array of tags
+  
+  // Relations
+  authorId    String
+  author      User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  images      PostImage[]
+  comments    Comment[]
+  likes       Like[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("posts")
+}
+
+model PostImage {
+  id        String @id @default(cuid())
+  url       String
+  filename  String
+  postId    String
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("post_images")
+}
+
+model Comment {
+  id        String @id @default(cuid())
+  content   String
+  postId    String
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  likes     Like[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}
+
+model Like {
+  id        String @id @default(cuid())
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@map("likes")
+}
+
+model Notification {
+  id        String @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  read      Boolean @default(false)
+  data      Json? // Additional data for the notification
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+enum PostStatus {
+  LOST
+  FOUND
+  RETURNED
+  CLOSED
+}
+
+enum PreferredContact {
+  PHONE
+  EMAIL
+  BOTH
+}
+
+enum NotificationType {
+  POST_COMMENT
+  POST_LIKE
+  POST_MATCH
+  SYSTEM
+}
