@@ -34,11 +34,19 @@ async function bootstrap() {
     return matchers.length === 1 ? matchers[0] : matchers;
   };
 
+  // Configure CORS
+  const defaultProdOrigins: Array<string | RegExp> = [
+    'https://lost-items-frontend.vercel.app',
+  ];
+  const originOption = isDev
+    ? /^https?:\/\/localhost:\d+$/
+    : parseCorsOrigins(corsOriginsRaw) || defaultProdOrigins;
+
   app.enableCors({
-    origin: isDev
-      ? /^https?:\/\/localhost:\d+$/
-      : parseCorsOrigins(corsOriginsRaw),
+    origin: originOption,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global prefix

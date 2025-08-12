@@ -28,7 +28,11 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      // Avoid CI breakages due to OS-specific line endings
+      'linebreak-style': 'off',
+      // Make Prettier respect platform EOL to prevent CRLF errors on Windows
+      'prettier/prettier': ['warn', { endOfLine: 'auto' }],
     },
   },
 );
