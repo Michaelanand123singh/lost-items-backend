@@ -36,17 +36,47 @@ async function bootstrap() {
 
   // Configure CORS
   const defaultProdOrigins: Array<string | RegExp> = [
+    // Primary production frontend
     'https://lost-items-frontend.vercel.app',
+    // Allow Vercel preview deployments
+    /^https:\/\/[\w-]+\.lost-items-frontend\.vercel\.app$/,
+    /^https:\/\/[\w-]+\.vercel\.app$/,
   ];
-  const originOption = isDev
-    ? /^https?:\/\/localhost:\d+$/
-    : parseCorsOrigins(corsOriginsRaw) || defaultProdOrigins;
+
+  const allowedOriginMatchers: Array<string | RegExp> = isDev
+    ? [/^https?:\/\/localhost:\d+$/]
+    : (Array.isArray(parseCorsOrigins(corsOriginsRaw))
+        ? (parseCorsOrigins(corsOriginsRaw) as Array<string | RegExp>)
+        : parseCorsOrigins(corsOriginsRaw)
+          ? [parseCorsOrigins(corsOriginsRaw) as string | RegExp]
+          : defaultProdOrigins);
+
+  const isOriginAllowed = (origin: string | undefined): boolean => {
+    if (!origin) return true; // allow non-browser or same-origin requests
+    return allowedOriginMatchers.some((matcher) =>
+      typeof matcher === 'string' ? matcher === origin : matcher.test(origin),
+    );
+  };
 
   app.enableCors({
-    origin: originOption,
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin || undefined)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: Origin not allowed -> ${origin}`), false);
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    // Allow common headers that browsers/send by default
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    exposedHeaders: ['Content-Length', 'ETag'],
   });
 
   // Global prefix
