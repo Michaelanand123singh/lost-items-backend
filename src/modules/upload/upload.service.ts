@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import type { Express } from 'express';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 import * as fs from 'fs';

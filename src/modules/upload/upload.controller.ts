@@ -1,4 +1,5 @@
 import { Controller, Post, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import type { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
