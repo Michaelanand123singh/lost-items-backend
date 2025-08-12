@@ -15,6 +15,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           }
         : undefined,
     });
+
+    // Log sanitized connection info to help diagnose Render deploy issues
+    PrismaService.logConnectionInfo(normalizedUrl || originalUrl);
   }
 
   private static ensureSecurePostgresUrl(databaseUrl: string): string {
@@ -41,6 +44,33 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       return url.toString();
     } catch {
       return databaseUrl;
+    }
+  }
+
+  private static logConnectionInfo(databaseUrl: string): void {
+    if (!databaseUrl) return;
+    try {
+      const url = new URL(databaseUrl);
+      const params = url.searchParams;
+      // eslint-disable-next-line no-console
+      console.log(
+        '[Prisma] Effective DB connection:',
+        JSON.stringify(
+          {
+            protocol: url.protocol.replace(':', ''),
+            host: url.hostname,
+            port: url.port || (url.protocol.startsWith('postgres') ? '5432' : ''),
+            database: url.pathname.replace('/', ''),
+            sslmode: params.get('sslmode') || 'n/a',
+            pgbouncer: params.get('pgbouncer') || 'n/a',
+            connection_limit: params.get('connection_limit') || 'n/a',
+          },
+          null,
+          0,
+        ),
+      );
+    } catch {
+      // ignore
     }
   }
 
