@@ -36,11 +36,13 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get('app.port') || 3001;
-  await app.listen(port);
+  // CRITICAL FIX: Use Render's dynamic PORT and bind to 0.0.0.0
+  const port = process.env.PORT || configService.get('app.port') || 3001;
+  await app.listen(port, '0.0.0.0');
   
-  console.log(`🚀 Application is running on: http://localhost:${port}/${configService.get('app.apiPrefix')}`);
+  console.log(`🚀 Application is running on port: ${port}`);
   console.log(`📊 Environment: ${configService.get('app.nodeEnv')}`);
+  console.log(`🌐 API Prefix: ${configService.get('app.apiPrefix')}`);
 }
 
 bootstrap();
