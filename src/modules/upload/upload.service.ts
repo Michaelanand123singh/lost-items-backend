@@ -26,24 +26,30 @@ export class UploadService {
       throw new BadRequestException('File too large. Maximum size is 5MB.');
     }
 
-    // Generate unique filename
-    const fileExtension = path.extname(file.originalname);
-    const filename = `${uuidv4()}${fileExtension}`;
-    
-    // Ensure upload directory exists
     const uploadDir = this.configService.get('upload.uploadDest') || './uploads';
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // Save file
-    const filePath = path.join(uploadDir, filename);
-    fs.writeFileSync(filePath, file.buffer);
+    let filename: string;
+    let filePath: string;
+
+    // If Multer saved to disk (dest configured), use its saved path
+    if ((file as any).path && (file as any).filename) {
+      filename = (file as any).filename as string;
+      filePath = (file as any).path as string;
+    } else {
+      // Memory storage fallback: write buffer ourselves
+      const fileExtension = path.extname(file.originalname);
+      filename = `${uuidv4()}${fileExtension}`;
+      filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, file.buffer);
+    }
 
     // Return file info
     return {
       url: `/uploads/${filename}`,
-      filename: filename,
+      filename,
       originalName: file.originalname,
       size: file.size,
       mimeType: file.mimetype,
