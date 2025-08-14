@@ -21,7 +21,8 @@ export class PostsController {
   @ApiOperation({ summary: 'Create a new post' })
   @ApiResponse({ status: 201, description: 'Post created successfully' })
   async create(@CurrentUser() user: any, @Body() createPostDto: CreatePostDto) {
-    const post = await this.postsService.create(user.id, createPostDto);
+    const imageUrls = Array.isArray((createPostDto as any).images) ? (createPostDto as any).images : [];
+    const post = await this.postsService.create(user.id, createPostDto, imageUrls);
     return BaseResponseDto.success(post, 'Post created successfully');
   }
 

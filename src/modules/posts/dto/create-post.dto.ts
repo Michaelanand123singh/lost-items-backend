@@ -102,4 +102,10 @@ export class CreatePostDto {
   @IsArray()
   @IsString({ each: true })
   tags: string[];
+
+  @ApiProperty({ example: ['/uploads/abc.jpg'], type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
 }
